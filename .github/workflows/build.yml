@@ -9,9 +9,13 @@ jobs:
 
       - name: Install tools
         run: |
-          dkp-pacman -Syu --noconfirm 3ds-dev
-          apt-get update
-          apt-get install -y ffmpeg
+          dkp-pacman -Sy --noconfirm 3ds-dev || true
+          dkp-pacman -S --noconfirm 3ds-dev || true
+          apt-get update -qq || true
+          apt-get install -y -qq ffmpeg || true
+          which ffmpeg || echo "ffmpeg missing"
+          which 3dsxtool || echo "3dsxtool missing"
+          which picasso || echo "picasso missing"
 
       - name: Convert MP3 to WAV
         run: |
@@ -19,10 +23,10 @@ jobs:
           i=1
           for f in *.mp3; do
             echo "Converting $f -> track0$i.wav"
-            ffmpeg -y -i "$f" -ac 1 -ar 22050 -sample_fmt s16 "track0$i.wav"
+            ffmpeg -y -i "$f" -ac 1 -ar 22050 -c:a pcm_s16le "track0$i.wav"
             i=$((i+1))
           done
-          ls -la
+          ls -la *.wav
 
       - name: Build
         run: make

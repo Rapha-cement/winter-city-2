@@ -1,37 +1,38 @@
 name: build-3dsx
-on: [push, workflow_dispatch]
+
+on:
+  workflow_dispatch:
+  push:
+
 jobs:
   build:
     runs-on: ubuntu-latest
     container: devkitpro/devkitarm:latest
+
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Install tools
+      - name: Download game ZIP
         run: |
-          dkp-pacman -Sy --noconfirm 3ds-dev || true
-          dkp-pacman -S --noconfirm 3ds-dev || true
-          apt-get update -qq || true
-          apt-get install -y -qq ffmpeg || true
-          which ffmpeg || echo "ffmpeg missing"
-          which 3dsxtool || echo "3dsxtool missing"
-          which picasso || echo "picasso missing"
+          curl -L -o game.zip \
+            https://github.com/Rapha-cement/winter-city-2/releases/download/v2.0/winterstad-nacht-3ds.zip
 
-      - name: Convert MP3 to WAV
+      - name: Extract game
         run: |
-          cd romfs/music
-          i=1
-          for f in *.mp3; do
-            echo "Converting $f -> track0$i.wav"
-            ffmpeg -y -i "$f" -ac 1 -ar 22050 -c:a pcm_s16le "track0$i.wav"
-            i=$((i+1))
-          done
-          ls -la *.wav
+          unzip -o game.zip
+          cd winterstad-3ds
+          ls -la
+          ls -la romfs/music
 
-      - name: Build
-        run: make
+      - name: Install 3DS tools
+        run: |
+          dkp-pacman -Sy --noconfirm 3ds-dev
 
-      - uses: actions/upload-artifact@v4
+      - name: Build 3DSX
+        run: |
+          cd winterstad-3ds
+          make
+
+      - name: Upload 3DSX
+        uses: actions/upload-artifact@v4
         with:
           name: winterstad-3dsx
-          path: winterstad.3dsx
+          path: winterstad-3ds/winterstad.3dsx

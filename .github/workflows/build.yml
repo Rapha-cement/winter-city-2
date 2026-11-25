@@ -6,10 +6,27 @@ jobs:
     container: devkitpro/devkitarm:latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install 3DS libraries
-        run: dkp-pacman -Syu --noconfirm 3ds-dev
+
+      - name: Install tools
+        run: |
+          dkp-pacman -Syu --noconfirm 3ds-dev
+          apt-get update
+          apt-get install -y ffmpeg
+
+      - name: Convert MP3 to WAV
+        run: |
+          cd romfs/music
+          i=1
+          for f in *.mp3; do
+            echo "Converting $f -> track0$i.wav"
+            ffmpeg -y -i "$f" -ac 1 -ar 22050 -sample_fmt s16 "track0$i.wav"
+            i=$((i+1))
+          done
+          ls -la
+
       - name: Build
         run: make
+
       - uses: actions/upload-artifact@v4
         with:
           name: winterstad-3dsx

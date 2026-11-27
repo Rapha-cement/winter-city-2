@@ -7,7 +7,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     container:
       image: devkitpro/devkitarm:latest
 
@@ -15,30 +14,33 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install 3DS libraries
+      - name: Install 3DS SDK
+        shell: bash
         run: |
           dkp-pacman -Sy --noconfirm
-          dkp-pacman -S --needed --noconfirm 3ds-dev libctru
+          dkp-pacman -S --needed --noconfirm 3ds-dev
+          test -f /opt/devkitpro/libctru/include/3ds.h
+          test -f /opt/devkitpro/libctru/lib/libctru.a
 
       - name: Extract Winterstad source
+        shell: bash
         run: |
           rm -rf "$GITHUB_WORKSPACE/winterstad"
           mkdir -p "$GITHUB_WORKSPACE/winterstad"
-          unzip -q "$GITHUB_WORKSPACE/winterstad-source.zip" \
-            -d "$GITHUB_WORKSPACE/winterstad"
+          unzip -q "$GITHUB_WORKSPACE/winterstad-source.zip" -d "$GITHUB_WORKSPACE/winterstad"
+          test -f "$GITHUB_WORKSPACE/winterstad/Makefile"
+          test -f "$GITHUB_WORKSPACE/winterstad/native/source/main.c"
 
-      - name: Verify libctru
-        run: |
-          echo "DEVKITPRO=$DEVKITPRO"
-          echo "DEVKITARM=$DEVKITARM"
-          echo "Checking libctru..."
-          test -f "$DEVKITPRO/libctru/include/3ds.h"
-          test -f "$DEVKITPRO/libctru/lib/libctru.a"
-          echo "libctru OK"
-
-      - name: Build native 3DS game
+      - name: Build Winterstad
+        shell: bash
         working-directory: winterstad
+        env:
+          DEVKITPRO: /opt/devkitpro
+          DEVKITARM: /opt/devkitpro/devkitARM
+          CTRULIB: /opt/devkitpro/libctru
         run: |
+          export PATH="$DEVKITPRO/devkitARM/bin:$DEVKITPRO/tools/bin:$PATH"
+          make clean || true
           make -j2
 
       - name: Upload 3DSX
@@ -46,11 +48,3 @@ jobs:
         with:
           name: winterstad-3dsx
           path: winterstad/output/winterstad.3dsx
-
-      - name: Upload complete build
-        uses: actions/upload-artifact@v4
-        with:
-          name: winterstad-build
-          path: |
-            winterstad/output/*
-            winterstad/build/*.map

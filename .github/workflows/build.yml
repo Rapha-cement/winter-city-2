@@ -8,16 +8,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: devkitpro/devkitarm:latest
+      image: devkitpro/devkitarm:latest   # <-- hier staat de image
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Install 3DS SDK packages
-        run: |
-          dkp-pacman -Sy --noconfirm
-          dkp-pacman -S --needed --noconfirm 3ds-dev
 
       - name: Verify SDK
         run: |

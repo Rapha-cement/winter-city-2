@@ -16,11 +16,22 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Extract Winterstad source
-        run: unzip -q winterstad-source.zip -d winterstad
+        run: |
+          rm -rf "$GITHUB_WORKSPACE/winterstad"
+          mkdir -p "$GITHUB_WORKSPACE/winterstad"
+          unzip -q "$GITHUB_WORKSPACE/winterstad-source.zip" -d "$GITHUB_WORKSPACE/winterstad"
+          echo "--- extracted files ---"
+          ls -la "$GITHUB_WORKSPACE/winterstad"
+          test -f "$GITHUB_WORKSPACE/winterstad/Makefile"
 
       - name: Build native 3DS game
-        working-directory: winterstad
-        run: make -j$(nproc --all)
+        run: |
+          cd "$GITHUB_WORKSPACE/winterstad"
+          echo "--- Makefile ---"
+          ls -la Makefile
+          echo "--- DEVKITARM ---"
+          echo "$DEVKITARM"
+          make -f Makefile -j$(nproc --all)
 
       - name: Upload 3DSX
         uses: actions/upload-artifact@v4

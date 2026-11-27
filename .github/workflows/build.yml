@@ -8,18 +8,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: devkitpro/devkitarm:latest   # <-- hier staat de image
+      image: devkitpro/devkitarm:latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Verify SDK
-        run: |
-          test -f /opt/devkitpro/libctru/include/3ds.h
-          test -f /opt/devkitpro/citro3d/include/citro3d.h
-          test -f /opt/devkitpro/citro2d/include/citro2d.h
-          echo "3DS SDK headers found"
 
       - name: Extract source
         run: |

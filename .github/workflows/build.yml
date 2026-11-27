@@ -14,33 +14,37 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install 3DS SDK
-        shell: bash
+      - name: Install 3DS SDK packages
         run: |
           dkp-pacman -Sy --noconfirm
           dkp-pacman -S --needed --noconfirm 3ds-dev
-          test -f /opt/devkitpro/libctru/include/3ds.h
-          test -f /opt/devkitpro/libctru/lib/libctru.a
 
-      - name: Extract Winterstad source
-        shell: bash
+      - name: Verify SDK
         run: |
-          rm -rf "$GITHUB_WORKSPACE/winterstad"
-          mkdir -p "$GITHUB_WORKSPACE/winterstad"
-          unzip -q "$GITHUB_WORKSPACE/winterstad-source.zip" -d "$GITHUB_WORKSPACE/winterstad"
-          test -f "$GITHUB_WORKSPACE/winterstad/Makefile"
-          test -f "$GITHUB_WORKSPACE/winterstad/native/source/main.c"
+          test -f /opt/devkitpro/libctru/include/3ds.h
+          test -f /opt/devkitpro/citro3d/include/citro3d.h
+          test -f /opt/devkitpro/citro2d/include/citro2d.h
+          echo "3DS SDK headers found"
 
-      - name: Build Winterstad
-        shell: bash
+      - name: Extract source
+        run: |
+          rm -rf winterstad
+          mkdir winterstad
+          unzip -q winterstad-source.zip -d winterstad
+          test -f winterstad/Makefile
+          test -f winterstad/native/source/main.c
+          test -f winterstad/source/Winterstad_3D_original.html
+          test -f winterstad/romfs/assets/music/track0.wav
+          test -f winterstad/romfs/assets/music/track1.wav
+          test -f winterstad/romfs/assets/music/track2.wav
+
+      - name: Build
         working-directory: winterstad
         env:
           DEVKITPRO: /opt/devkitpro
           DEVKITARM: /opt/devkitpro/devkitARM
-          CTRULIB: /opt/devkitpro/libctru
         run: |
           export PATH="$DEVKITPRO/devkitARM/bin:$DEVKITPRO/tools/bin:$PATH"
-          make clean || true
           make -j2
 
       - name: Upload 3DSX

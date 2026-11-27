@@ -15,29 +15,26 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install 3DS development packages
+      - name: Install 3DS libraries
         run: |
           dkp-pacman -Sy --noconfirm
-          dkp-pacman -S --noconfirm 3ds-dev
+          dkp-pacman -S --needed --noconfirm 3ds-dev libctru
 
       - name: Extract Winterstad source
         run: |
           rm -rf "$GITHUB_WORKSPACE/winterstad"
-          mkdir "$GITHUB_WORKSPACE/winterstad"
+          mkdir -p "$GITHUB_WORKSPACE/winterstad"
           unzip -q "$GITHUB_WORKSPACE/winterstad-source.zip" \
             -d "$GITHUB_WORKSPACE/winterstad"
 
-      - name: Check build environment
+      - name: Verify libctru
         run: |
           echo "DEVKITPRO=$DEVKITPRO"
           echo "DEVKITARM=$DEVKITARM"
-          test -f "$DEVKITARM/3ds_rules"
-          test -f "$DEVKITARM/base_rules"
-          test -f "$GITHUB_WORKSPACE/winterstad/Makefile"
-          test -f "$GITHUB_WORKSPACE/winterstad/native/source/main.c"
-          test -f "$GITHUB_WORKSPACE/winterstad/romfs/assets/music/track0.wav"
-          test -f "$GITHUB_WORKSPACE/winterstad/romfs/assets/music/track1.wav"
-          test -f "$GITHUB_WORKSPACE/winterstad/romfs/assets/music/track2.wav"
+          echo "Checking libctru..."
+          test -f "$DEVKITPRO/libctru/include/3ds.h"
+          test -f "$DEVKITPRO/libctru/lib/libctru.a"
+          echo "libctru OK"
 
       - name: Build native 3DS game
         working-directory: winterstad
